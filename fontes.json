@@ -1,8 +1,4 @@
 {
-    "Valor econômico": {
-        "url":"http://pox.globo.com/rss/valor",
-        "attrs":""
-    },
     "Yahoo Finanças": {
         "url":"https://br.financas.yahoo.com/rss/",
         "attrs":{"class":"caas-content-wrapper"}
@@ -13,11 +9,11 @@
     },
     "InfoMoney": {
         "url":"https://www.infomoney.com.br/feed/",
-        "attrs":{"class":"col-md-9 col-lg-8 col-xl-6  m-sm-auto m-lg-0 article-content"}
+        "attrs":{}
     },
     "Investing": {
         "url":"https://br.investing.com/rss/news_25.rss",
-        "attrs":{"class":"WYSIWYG articlePage"}
+        "attrs":{}
     },
     "Monitor do mercado": {
         "url":"https://monitordomercado.com.br/content.rss",
@@ -34,5 +30,13 @@
     "Seu Dinheiro": {
         "url":"https://www.seudinheiro.com/feed/",
         "attrs":{"class":"single__body"}
+    },
+    "Mercado e Consumo": {
+        "url":"https://mercadoeconsumo.com.br/feed/",
+        "attrs":{"class":"entry-content no-share"}
+    },
+    "Suno": {
+        "url":"https://www.suno.com.br/artigos/c/radar/feed/",
+        "attrs": {}
     }
 }

@@ -1,6 +1,8 @@
 import asyncio
 import json
 from news import RSS
+import nest_asyncio
+nest_asyncio.apply()
 
 # Recebe as fontes utilizadas a partir de um 'fontes.json' e gera objetos
 # do tipo RSS iteráveis
@@ -17,16 +19,15 @@ def get_sources() -> RSS:
 # Corrotina que procura, classifica e insere notícias em repetição
 async def searching_news(source:RSS):
     print(f"Inicializando procura de notícias de {source.name}")
-    time = await source.take_date()
-    
+    time = await source.get_date()
+
     while True:
-        table = await source.scrap(time)
+        table = await source.get_news(time)
 
         # Se alguma notícia for encontrada, classifique e insira
         if not table.news.empty:
             time = table.date
-            # table = await source.classify(table)
-            await table.insert()
+            await table.insert_news()
             print(f"{time}: Foram inseridas {len(table.news.index)} notícias.")
 
         await asyncio.sleep(1)
