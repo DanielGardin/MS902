@@ -1,5 +1,5 @@
 import requests
-import pytz
+from pytz import timezone
 import json
 import re
 import aiohttp
@@ -9,18 +9,24 @@ from sheet import get_worksheet, config
 
 _headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             ' (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36 Edg/95.0.1020.44'}
-_tz_brasil = pytz.timezone('America/Fortaleza')
+_tz_brasil = timezone('America/Fortaleza')
 
 with open('keywords.json', encoding='utf-8') as file:
     assets = json.load(file)
 
 def standardize(content:str) -> str:
+    """
+    Padroniza o texto, retirando quaisquer caracteres que não sejam
+    letras ou números.
+    """
+
     text = content
     chars = [".",",",";",":","(", ")", "'",'"', "!", "?","/"]
     for char in chars:
         text = text.replace(char, '')
 
     return text.upper()
+
 
 class News:
     _last = None
@@ -33,9 +39,14 @@ class News:
         return repr(self.news)
 
     async def insert_news(self):
+        """"
+        Insere notícias de um DataFrame para a planilha do Google configurada.
+        """
+
         worksheet = await get_worksheet()
         worksheet.append_rows(self.news.values.tolist(), value_input_option='USER_ENTERED')
         return 1
+
 
 class RSS:
     def __init__(self, name:str, url:str, attrs:dict = {}):
@@ -47,6 +58,12 @@ class RSS:
         return self.name
 
     def get_tags(self, title:str, url:str) -> list[str]:
+        """"
+        Busca palavras-chave, definidas no arquivo keywords.json, no título ou corpo da notícia,
+        este último realizando scrapping a partir do url da mesma.
+        Retorna uma lista de possíveis tags para a notícia.
+        """
+
         if config['classification'] == 'simple':
             try:
                 assert bool(self.attrs)
@@ -75,7 +92,13 @@ class RSS:
         else:
             return ''
 
+
     async def get_news(self, date = None) -> News:
+        """"
+        Realiza scrapping no rss da fonte buscando por notícias recentes e que tenham
+        tags de interesse.
+        """
+
         news = pd.DataFrame()
         try:
             async with aiohttp.ClientSession() as session:
@@ -85,10 +108,10 @@ class RSS:
                     feed = soup.findAll('item')
 
                     if date is None:
-                        for item in feed:
-                            title = item.find('title').text
-                            link = item.find('link').text
-                            published = pd.to_datetime(item.find('pubDate').text)
+                        for notice in feed:
+                            title = notice.find('title').text
+                            link = notice.find('link').text
+                            published = pd.to_datetime(notice.find('pubDate').text)
                             tags = self.get_tags(title, link)
 
                             if not tags:
@@ -147,7 +170,13 @@ class RSS:
             print(f"Erro com o scraping de {self.name}:{error}. Tentando novamente...")
             return News(news, date)
 
+
     async def get_date(self):
+        """
+        Determina a data da última notícia inserida da fonte em questão. Retorna None
+        se nenhuma for encontrada.
+        """
+
         sheet = await get_worksheet()
         sheet = pd.DataFrame(sheet.get_all_records())
         try:

@@ -1,4 +1,6 @@
 import asyncio
+from datetime import datetime
+from pytz import timezone
 import json
 from news import RSS
 import nest_asyncio
@@ -7,7 +9,11 @@ nest_asyncio.apply()
 # Recebe as fontes utilizadas a partir de um 'fontes.json' e gera objetos
 # do tipo RSS iteráveis
 def get_sources() -> RSS:
-    # Abrir e armazenar o JSON em um dicionário
+    """
+    Recebe as fontes utilizadas a partir do arquivo fontes.json e 
+    gera objetos RSS iteráveis.
+    """
+
     with open('fontes.json', encoding='utf-8') as sources:
         data = json.load(sources)
 
@@ -16,21 +22,30 @@ def get_sources() -> RSS:
     for key, value in data.items():
         yield RSS(key, value['url'], value['attrs'])
 
-# Corrotina que procura, classifica e insere notícias em repetição
-async def searching_news(source:RSS):
-    print(f"Inicializando procura de notícias de {source.name}")
+
+async def searching_news(source:RSS) -> None:
+    """
+    Busca notícias da fonte 'source'  e as insere na tabela assincronamente 
+    até que o programa seja encerrado.
+    """
+
+    print(f"Inicializando procura de notícias de {source}")
     time = await source.get_date()
+
+    tz = timezone('America/Fortaleza')
 
     while True:
         table = await source.get_news(time)
 
-        # Se alguma notícia for encontrada, classifique e insira
+        # Se alguma notícia for encontrada, classifique-as e insire-as
         if not table.news.empty:
-            time = table.date
+            time = datetime.now(tz)
             await table.insert_news()
             print(f"{time}: Foram inseridas {len(table.news.index)} notícias.")
 
-        await asyncio.sleep(1)
+        # Aguarde até realizar a próxima busca
+        await asyncio.sleep(300)
+
 
 def main():
     loop = asyncio.get_event_loop()
